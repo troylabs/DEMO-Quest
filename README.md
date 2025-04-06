@@ -18,32 +18,24 @@ Reward attendees with a live leaderboard and raffle prizes.
 
 
 ## Core Features
-* 1. Bingo Card Generator
-Unique randomized card per attendee (5x5 or smaller).
-
-
-Squares feature booth name + question prompt.
+* Bingo Card Generator
+** Unique randomized card per attendee (5x5 or smaller).
+** Squares feature booth name + question prompt.
 
 
 * 2. Fun Fact Submission
-Tap a square → see question → submit an answer.
-
-
-Answers stored in DB, some reviewed for raffle eligibility.
+** Tap a square → see question → submit an answer.
+** Answers stored in DB, some reviewed for raffle eligibility.
 
 
 * 3. Leaderboard
-Each square = 1 point.
-
-
-Live points-based leaderboard visible to all.
+** Each square = 1 point.
+** Live points-based leaderboard visible to all.
 
 
 * 4. Raffle System
-Top point-earners entered into a raffle.
-
-
-Bonus entries for completing a bingo (row, col, diagonal).
+** Top point-earners entered into a raffle.
+** Bonus entries for completing a bingo (row, col, diagonal).
 
 
 
@@ -100,7 +92,7 @@ Test UI/UX flows across devices
 
 
 Admin dashboard / tools for monitoring
- ✍️ Taken by: __________Siddarth
+ ✍️ Taken by: __________ Siddarth
 
 
 
