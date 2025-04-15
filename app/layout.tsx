@@ -2,6 +2,7 @@ import { Inter } from "next/font/google"
 import "./globals.css"
 import { Toaster } from "@/components/ui/toaster"
 import { ThemeProvider } from "@/components/theme-provider"
+import { ProvideAuth } from "@/hooks/use-auth"
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -14,7 +15,7 @@ export const metadata = {
     generator: 'v0.dev'
 }
 
-export default function RootLayout({ children }) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
@@ -23,7 +24,9 @@ export default function RootLayout({ children }) {
       </head>
       <body className={`${inter.className} overscroll-none`}>
         <ThemeProvider attribute="class" defaultTheme="dark">
-          {children}
+          <ProvideAuth>
+            {children}
+          </ProvideAuth>
           <Toaster />
         </ThemeProvider>
       </body>

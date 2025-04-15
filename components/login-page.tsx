@@ -2,27 +2,64 @@
 
 import { ArrowRight, Trophy } from "lucide-react"
 import { useRouter } from "next/navigation"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { useAuth } from "@/hooks/use-auth"
 
 export default function LoginPage() {
+  const { user, login, signup }  = useAuth()
   const router = useRouter()
   const [email, setEmail] = useState("")
   const [name, setName] = useState("")
+  const [password, setPassword] = useState("")
+  const [confirmPassword, setConformPassword] = useState("")
   const [isLoading, setIsLoading] = useState(false)
 
-  const handleSubmit = (e) => {
+  useEffect(() => {
+    // already logged in, redirect to bingo page
+    if (user) {
+      router.push("/bingo")
+    }
+  }, [user, router])
+
+  const handleLogin = async (e: { preventDefault: () => void }) => {
     e.preventDefault()
     setIsLoading(true)
 
-    // Simulate loading
-    setTimeout(() => {
+    const response = await login(email, password)
+    setIsLoading(false)
+
+    if (response) {
       router.push("/bingo")
-    }, 1000)
+    } else {
+      alert("Login failed. Please check your credentials.")
+    }
+  }
+
+  const handleSignUp = async (e: { preventDefault: () => void }) => {
+    e.preventDefault()
+    setIsLoading(true)
+
+    if (password !== confirmPassword) {
+      alert("Passwords do not match.")
+      setIsLoading(false)
+      return
+    }
+
+    const response = await signup(email, password, name)
+    setIsLoading(false)
+
+    console.log("response", response)
+
+    if (response) {
+      router.push("/bingo")
+    } else {
+      alert("Signup failed. Please check your credentials.")
+    }
   }
 
   return (
@@ -43,26 +80,15 @@ export default function LoginPage() {
             <TabsTrigger value="login" className="data-[state=active]:bg-white/20">
               Login
             </TabsTrigger>
-            <TabsTrigger value="info" className="data-[state=active]:bg-white/20">
-              How to Play
+            <TabsTrigger value="signup" className="data-[state=active]:bg-white/20">
+              Sign Up
             </TabsTrigger>
           </TabsList>
 
           <TabsContent value="login" className="mt-4">
             <Card className="border-none bg-white/10 backdrop-blur-sm">
               <CardContent className="pt-6">
-                <form onSubmit={handleSubmit} className="space-y-4">
-                  <div className="space-y-2">
-                    <Input
-                      type="text"
-                      placeholder="Your Name"
-                      value={name}
-                      onChange={(e) => setName(e.target.value)}
-                      className="bg-white/10 border-white/20 text-white placeholder:text-white/50 focus-visible:ring-amber-400"
-                      required
-                    />
-                  </div>
-
+                <form onSubmit={handleLogin} className="space-y-4">
                   <div className="space-y-2">
                     <Input
                       type="email"
@@ -73,6 +99,85 @@ export default function LoginPage() {
                       required
                     />
                   </div>
+                  <div className="space-y-2">
+                    <Input
+                      type="password"
+                      placeholder="Password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      className="bg-white/10 border-white/20 text-white placeholder:text-white/50 focus-visible:ring-amber-400"
+                      required
+                    />
+                  </div>
+
+
+                  <Button
+                    type="submit"
+                    className="w-full bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-500 hover:to-amber-600 text-indigo-900 font-bold"
+                    disabled={isLoading || !email || !password}
+                  >
+                    {isLoading ? (
+                      <div className="flex items-center gap-2">
+                        <div className="h-4 w-4 border-2 border-indigo-900 border-t-transparent rounded-full animate-spin"></div>
+                        Logging in...
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-2">
+                        Start Playing
+                        <ArrowRight className="h-4 w-4" />
+                      </div>
+                    )}
+                  </Button>
+                </form>
+              </CardContent>
+            </Card>
+          </TabsContent>
+          
+          <TabsContent value="signup" className="mt-4">
+            <Card className="border-none bg-white/10 backdrop-blur-sm">
+              <CardContent className="pt-6">
+                <form onSubmit={handleSignUp} className="space-y-4">
+                  <div className="space-y-2">
+                    <Input
+                      type="email"
+                      placeholder="Email Address"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      className="bg-white/10 border-white/20 text-white placeholder:text-white/50 focus-visible:ring-amber-400"
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Input
+                      type="text"
+                      placeholder="Your Name"
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      className="bg-white/10 border-white/20 text-white placeholder:text-white/50 focus-visible:ring-amber-400"
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Input
+                      type="password"
+                      placeholder="Password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      className="bg-white/10 border-white/20 text-white placeholder:text-white/50 focus-visible:ring-amber-400"
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Input
+                      type="password"
+                      placeholder="Confirm Password"
+                      value={confirmPassword}
+                      onChange={(e) => setConformPassword(e.target.value)}
+                      className="bg-white/10 border-white/20 text-white placeholder:text-white/50 focus-visible:ring-amber-400"
+                      required
+                    />
+                  </div>
+
 
                   <Button
                     type="submit"
@@ -96,7 +201,9 @@ export default function LoginPage() {
             </Card>
           </TabsContent>
 
-          <TabsContent value="info" className="mt-4 space-y-4">
+          
+
+          {/* <TabsContent value="info" className="mt-4 space-y-4">
             <Card className="border-none bg-white/10 backdrop-blur-sm">
               <CardContent className="pt-6">
                 <h3 className="text-lg font-bold text-amber-300 mb-3">How to Play</h3>
@@ -164,7 +271,7 @@ export default function LoginPage() {
                 <ArrowRight className="h-4 w-4" />
               </div>
             </Button>
-          </TabsContent>
+          </TabsContent> */}
         </Tabs>
       </div>
 
