@@ -10,12 +10,10 @@ import { generateBingoCard } from "@/lib/bingo-utils"
 import { checkForBingo } from "@/lib/bingo-utils"
 
 export default function BingoCard() {
-  const [bingoCard, setBingoCard] = useState(generateBingoCard())
+  const [bingoCard, setBingoCard] = useState(generateBingoCard()) //change so that all users have same bingo
   const [selectedBooth, setSelectedBooth] = useState(null)
-  const [completedBooths, setCompletedBooths] = useState([])
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [hasBingo, setHasBingo] = useState(false)
-  const [bingoLines, setBingoLines] = useState([])
 
   const handleBoothClick = (booth) => {
     if (booth && !completedBooths.includes(booth.id)) {

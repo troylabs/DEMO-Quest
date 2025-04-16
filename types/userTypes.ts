@@ -4,4 +4,10 @@ export type UserData = {
     email: string;
     password: string;
     name: string;
-}
+    currentGame? : {
+        marked: number[];
+        completedRows: number[];
+        completedCols: number[];
+        completedDiags: number[]
+    };
+};
