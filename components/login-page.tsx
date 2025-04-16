@@ -53,8 +53,6 @@ export default function LoginPage() {
     const response = await signup(email, password, name)
     setIsLoading(false)
 
-    console.log("response", response)
-
     if (response) {
       router.push("/bingo")
     } else {

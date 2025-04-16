@@ -1,5 +1,5 @@
 import { dbConnect } from "@/utils/db";
-import UserModel from '@/utils/backend/user';
+import UserModel from '@/utils/backend/models/user';
 import { hashSync, genSaltSync } from "bcrypt";
 import { sign } from "jsonwebtoken";
 import { NextRequest, NextResponse } from "next/server";
@@ -8,7 +8,6 @@ export async function POST(req: NextRequest) {
     try{
         const body = await req.json();
         const { email, password, name } = body;
-        console.log("body", body)
     
         if (!email || !password || !name) {
             return Response.json({ message: "Please provide all informations" }, { status: 400 })
