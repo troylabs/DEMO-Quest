@@ -1,6 +1,6 @@
 import { cookies } from 'next/headers'
 import { dbConnect } from '@/utils/db'
-import UserModel from '@/utils/backend/user';
+import UserModel from '@/utils/backend/models/user';
 import { verify } from 'jsonwebtoken'
 
 export async function GET(req: Request) {

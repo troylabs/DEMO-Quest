@@ -59,7 +59,6 @@ function useProvideAuth() {
                 }
             })
             const data = await response.json()
-            console.log("data from singup", data)
             if (response.ok) {
                 setUser(data.user)
                 return data.user

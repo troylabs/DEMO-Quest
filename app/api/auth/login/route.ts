@@ -1,5 +1,5 @@
 import { dbConnect } from '@/utils/db';
-import UserModel from '@/utils/backend/user';
+import UserModel from '@/utils/backend/models/user';
 import { compareSync } from 'bcrypt'
 import { NextRequest, NextResponse } from 'next/server';
 import { sign } from 'jsonwebtoken'
@@ -41,50 +41,3 @@ export async function POST(req: NextRequest) {
         return Response.json({ error: "an error has occurred" }, { status: 500 })
     }
 }
-
-// export async function POST(req: NextRequest) {
-//     try {
-//         const { email, password } = await req.json()
-
-//         if (!email || !password) {
-//             return Response.json({ message: "Please provide both username and password" }, { status: 400 })
-//         }
-
-//         await dbConnect()
-//         const user = await UserModel.findOne({email})
-        
-//         if (error || !data.length) {
-//             console.log('error:', error);
-//             return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 });
-//         }
-
-//         const pwCompare = compareSync(password, data[0]?.password)
-//         if(!pwCompare) return Response.json({ message: "Invalid credentials" }, { status: 401 })        
-            
-//         // sign jwt token
-//         const token = sign({
-//             email: data[0].email,
-//             id: data[0].id,
-//             display_name: data[0].display_name,
-//         }, process.env.JWT_SECRET!, {})
-//         if(!token) return Response.json({ message: "Error signing token" }, { status: 500 })
-            
-//         // set cookie
-//         const expireIn7Days = new Date()
-//         expireIn7Days.setDate(expireIn7Days.getDate() + 7)
-
-//         const response = NextResponse.json({ 
-//             success: true,
-//             user: data[0].display_name,
-//         }, { 
-//             status: 200
-//         });
-
-//         response.cookies.set('tradesc-token', token, { httpOnly: true, expires: expireIn7Days, sameSite: 'none', secure: true });
-        
-//         return response
-//     } catch (error) {
-//         console.log('error:', error);
-//         return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
-//     }
-// }%
