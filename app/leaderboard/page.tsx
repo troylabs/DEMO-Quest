@@ -1,20 +1,12 @@
-import { ArrowLeft, Medal, Trophy, Users } from "lucide-react"
-import Link from "next/link"
+import { ArrowLeft, Medal, Trophy, Users } from "lucide-react";
+import Link from "next/link";
+import getLeaderboardData from "@/lib/getLeaderboard";
 
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
-export default function LeaderboardPage() {
-  // Mock leaderboard data
-  const leaderboardData = [
-    { id: 1, name: "Alex Johnson", points: 15, completedSquares: 15, bingos: 2 },
-    { id: 2, name: "Sam Wilson", points: 12, completedSquares: 12, bingos: 1 },
-    { id: 3, name: "Taylor Smith", points: 10, completedSquares: 10, bingos: 0 },
-    { id: 4, name: "Jordan Lee", points: 8, completedSquares: 8, bingos: 0 },
-    { id: 5, name: "Casey Brown", points: 7, completedSquares: 7, bingos: 0 },
-    { id: 6, name: "Riley Green", points: 5, completedSquares: 5, bingos: 0 },
-    { id: 7, name: "Morgan White", points: 3, completedSquares: 3, bingos: 0 },
-  ]
+export default async function LeaderboardPage() {
+  const leaderboardData = await getLeaderboardData();
 
   return (
     <main className="min-h-screen bg-gradient-to-b from-violet-600 via-purple-600 to-indigo-700 text-white">
@@ -25,7 +17,11 @@ export default function LeaderboardPage() {
             <h1 className="text-xl font-bold">Leaderboard</h1>
           </div>
           <Link href="/bingo">
-            <Button variant="ghost" size="sm" className="text-white hover:bg-white/10 rounded-full">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-white hover:bg-white/10 rounded-full"
+            >
               <ArrowLeft className="h-4 w-4 mr-1" />
               Back
             </Button>
@@ -41,8 +37,12 @@ export default function LeaderboardPage() {
                 <span className="text-xl font-bold text-gray-800">2</span>
               </div>
               <div className="h-20 w-16 bg-white/10 backdrop-blur-sm rounded-t-lg flex flex-col items-center justify-end pb-2">
-                <span className="text-xs text-white/80">Sam W.</span>
-                <span className="text-sm font-bold text-white">{leaderboardData[1].points} pts</span>
+                <span className="text-xs text-white/80">
+                  {leaderboardData[1].name}
+                </span>
+                <span className="text-sm font-bold text-white">
+                  {leaderboardData[1].points} pts
+                </span>
               </div>
             </div>
 
@@ -52,8 +52,12 @@ export default function LeaderboardPage() {
                 <span className="text-2xl font-bold text-amber-900">1</span>
               </div>
               <div className="h-28 w-20 bg-gradient-to-b from-amber-400/20 to-amber-500/20 backdrop-blur-sm rounded-t-lg flex flex-col items-center justify-end pb-2">
-                <span className="text-xs text-white/80">Alex J.</span>
-                <span className="text-sm font-bold text-white">{leaderboardData[0].points} pts</span>
+                <span className="text-xs text-white/80">
+                  {leaderboardData[0].name}
+                </span>
+                <span className="text-sm font-bold text-white">
+                  {leaderboardData[0].points} pts
+                </span>
                 <div className="mt-1 bg-amber-400/30 rounded-full px-2 py-0.5 text-[10px] text-white">
                   {leaderboardData[0].bingos} Bingos
                 </div>
@@ -66,8 +70,12 @@ export default function LeaderboardPage() {
                 <span className="text-xl font-bold text-amber-100">3</span>
               </div>
               <div className="h-16 w-16 bg-white/10 backdrop-blur-sm rounded-t-lg flex flex-col items-center justify-end pb-2">
-                <span className="text-xs text-white/80">Taylor S.</span>
-                <span className="text-sm font-bold text-white">{leaderboardData[2].points} pts</span>
+                <span className="text-xs text-white/80">
+                  {leaderboardData[2].name}
+                </span>
+                <span className="text-sm font-bold text-white">
+                  {leaderboardData[2].points} pts
+                </span>
               </div>
             </div>
           </div>
@@ -94,8 +102,12 @@ export default function LeaderboardPage() {
                       <div className="font-medium">{user.name}</div>
                     </div>
                     <div className="flex items-center gap-2">
-                      <div className="text-xs text-white/60">{user.completedSquares} booths</div>
-                      <div className="font-bold text-amber-300">{user.points}</div>
+                      <div className="text-xs text-white/60">
+                        {user.completedSquares} booths
+                      </div>
+                      <div className="font-bold text-amber-300">
+                        {user.points}
+                      </div>
                     </div>
                   </div>
                 ))}
@@ -109,11 +121,12 @@ export default function LeaderboardPage() {
               <p className="font-medium text-white">Raffle Drawing</p>
             </div>
             <p>The raffle will take place at 5:00 PM at the main stage.</p>
-            <p className="mt-1 text-amber-300 font-medium">Each point gives you one entry in the raffle!</p>
+            <p className="mt-1 text-amber-300 font-medium">
+              Each point gives you one entry in the raffle!
+            </p>
           </div>
         </div>
       </div>
     </main>
-  )
+  );
 }
-
