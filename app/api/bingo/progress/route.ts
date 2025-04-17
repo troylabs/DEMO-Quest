@@ -41,13 +41,7 @@ export async function GET(req: NextRequest) {
   const markedSquares = new Set([...user.currentGame.marked, 12]);
 
   //get score
-  const bingos = {
-    rows: user.currentGame.completedRows,
-    cols: user.currentGame.completedCols,
-    diags: user.currentGame.completedDiags,
-  };
-
-  const score = (bingos.rows.length + bingos.cols.length + bingos.diags.length) * 10;
+  const score = user.currentGame.score;
 
   return NextResponse.json({
     allMarked: Array.from(markedSquares),

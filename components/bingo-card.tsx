@@ -90,7 +90,7 @@ export default function BingoCard({ fetchData, sendResult }: BingoCardProps) {
     const data = await sendResult(userId, selectedBooth.index, answer);
 
     // Ensure free box (12) is always included in marked squares
-    const markedSquares = new Set([...(data.allMarked || []), 12]);
+    const markedSquares = new Set([...(data.allMarked || [])]);
     setMarked(Array.from(markedSquares));
 
     setBingoLines((prev) => {
