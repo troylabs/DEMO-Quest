@@ -13,7 +13,7 @@ export default async function getLeaderboardData(): Promise<User[]> {
   const topUsers = await user
     .find()
     .sort({ "currentGame.score": -1, "currentGame.lastUpdated": 1 })
-    .limit(7);
+    .limit(50);
 
   const top_users: User[] = [];
   for (const user_data of topUsers) {
@@ -34,10 +34,11 @@ export default async function getLeaderboardData(): Promise<User[]> {
     });
   }
 
-  // Pad with dummy entries until we have exactly 7
-  while (top_users.length < 7) {
+  // Pad with dummy entries until we have exactly 3
+  while (top_users.length < 3) {
+    const idx = top_users.length + 1;
     top_users.push({
-      id: 0,
+      id: idx,
       name: "???",
       points: 0,
       completedSquares: 0,
