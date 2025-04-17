@@ -54,7 +54,7 @@ export async function POST(req: NextRequest) {
   allMarked.push(12);
 
   return NextResponse.json({
-    newScore: result.score,
+    newScore: score,
     newLines: result.newBingos.map((line) => line.index),
     allMarked: allMarked,
   });

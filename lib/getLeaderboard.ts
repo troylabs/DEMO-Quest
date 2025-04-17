@@ -12,7 +12,7 @@ export default async function getLeaderboardData(): Promise<User[]> {
   //get top users
   const topUsers = await user
     .find()
-    .sort({ "currentGame.score": -1, "currentGame.lastUpdated": 1 })
+    .sort({ "currentGame.score": -1, "updatedAt": 1 })
     .limit(50);
 
   const top_users: User[] = [];
