@@ -146,83 +146,14 @@ const boothData = [
   },
 ]
 
-// Function to shuffle an array (Fisher-Yates algorithm)
-function shuffleArray(array) {
-  const newArray = [...array]
-  for (let i = newArray.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1))
-    ;[newArray[i], newArray[j]] = [newArray[j], newArray[i]]
-  }
-  return newArray
-}
-
-// Generate a 5x5 bingo card with randomized booths
-export function generateBingoCard() {
-  const shuffledBooths = shuffleArray(boothData)
-  const card = []
-
-  // Take the first 24 booths (5x5 = 25, with middle as free space)
-  for (let i = 0; i < 25; i++) {
-    // Middle square is a free space
-    if (i === 12) {
-      card.push(null)
-    } else {
-      const boothIndex = i > 12 ? i - 1 : i
-      card.push(shuffledBooths[boothIndex])
-    }
-  }
-
-  return card
-}
-
-// Check if the player has a bingo (row, column, or diagonal)
-export function checkForBingo(card, completedBoothIds) {
-  const bingoLines = []
-
-  // Convert the card to a 5x5 grid of completed status (true/false)
-  const grid = []
-  for (let i = 0; i < 5; i++) {
-    const row = []
-    for (let j = 0; j < 5; j++) {
-      const index = i * 5 + j
-      const booth = card[index]
-      // Middle is free space (always completed)
-      if (index === 12) {
-        row.push(true)
-      } else {
-        row.push(booth && completedBoothIds.includes(booth.id))
-      }
-    }
-    grid.push(row)
-  }
-
-  // Check rows
-  for (let i = 0; i < 5; i++) {
-    if (grid[i].every((cell) => cell)) {
-      bingoLines.push([i * 5, i * 5 + 1, i * 5 + 2, i * 5 + 3, i * 5 + 4])
-    }
-  }
-
-  // Check columns
-  for (let j = 0; j < 5; j++) {
-    if (grid.every((row) => row[j])) {
-      bingoLines.push([j, j + 5, j + 10, j + 15, j + 20])
-    }
-  }
-
-  // Check diagonal (top-left to bottom-right)
-  if (grid[0][0] && grid[1][1] && grid[2][2] && grid[3][3] && grid[4][4]) {
-    bingoLines.push([0, 6, 12, 18, 24])
-  }
-
-  // Check diagonal (top-right to bottom-left)
-  if (grid[0][4] && grid[1][3] && grid[2][2] && grid[3][1] && grid[4][0]) {
-    bingoLines.push([4, 8, 12, 16, 20])
-  }
-
+//export bingo card
+export const staticBingoCard = Array.from({ length: 25 }, (_, i) => {
+  if (i === 12) return null //free space
+  const boothIndex = i > 12 ? i - 1 : i
+  const booth = boothData[boothIndex]
   return {
-    hasBingo: bingoLines.length > 0,
-    lines: bingoLines,
+    ...booth,
+    id: i, //0-11, 13-24
   }
-}
+})
 

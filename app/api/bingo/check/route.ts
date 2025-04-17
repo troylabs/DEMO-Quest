@@ -21,6 +21,8 @@ export async function POST(req: NextRequest) {
 
     //add new booth
     user.currentGame.marked.push(boothIndex)
+    console.log("Received boothIndex:", boothIndex)
+
 
     const prev: PreviousBingos = {
         rows: new Set(user.currentGame.completedRows),

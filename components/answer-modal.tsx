@@ -1,9 +1,9 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { Send } from "lucide-react"
+import { useState, FormEvent } from "react";
+import { Send, AlertCircle } from "lucide-react";
 
-import { Button } from "@/components/ui/button"
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -11,28 +11,53 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog"
-import { Textarea } from "@/components/ui/textarea"
+} from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
 
-export default function AnswerModal({ isOpen, onClose, booth, onSubmit }) {
-  const [answer, setAnswer] = useState("")
-  const [isSubmitting, setIsSubmitting] = useState(false)
+interface Booth {
+  index: number;
+  name: string;
+  question?: string;
+}
 
-  const handleSubmit = (e) => {
-    e.preventDefault()
+interface AnswerModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  booth: Booth | null;
+  onSubmit: (answer: string) => void;
+}
+
+export default function AnswerModal({
+  isOpen,
+  onClose,
+  booth,
+  onSubmit,
+}: AnswerModalProps) {
+  const [answer, setAnswer] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
     if (answer.trim()) {
-      setIsSubmitting(true)
-
-      // Simulate a brief loading state for better UX
-      setTimeout(() => {
-        onSubmit(answer)
-        setAnswer("")
-        setIsSubmitting(false)
-      }, 600)
+      setIsSubmitting(true);
+      setError(null);
+      try {
+        await onSubmit(answer.trim());
+        setAnswer("");
+        onClose(); // Close the modal after successful submission
+      } catch (error) {
+        console.error("Error submitting answer:", error);
+        setError(
+          error instanceof Error ? error.message : "Failed to submit answer"
+        );
+      } finally {
+        setIsSubmitting(false);
+      }
     }
-  }
+  };
 
-  if (!booth) return null
+  if (!booth) return null;
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -49,6 +74,12 @@ export default function AnswerModal({ isOpen, onClose, booth, onSubmit }) {
               <p className="font-medium mb-1 text-amber-300">Question:</p>
               <p className="text-white">{booth.question}</p>
             </div>
+            {error && (
+              <div className="bg-red-500/10 text-red-300 p-3 rounded-lg flex items-center gap-2 text-sm">
+                <AlertCircle className="h-4 w-4" />
+                {error}
+              </div>
+            )}
             <Textarea
               placeholder="Type your answer here..."
               value={answer}
@@ -58,12 +89,19 @@ export default function AnswerModal({ isOpen, onClose, booth, onSubmit }) {
             />
           </div>
           <DialogFooter className="mt-4">
-            <Button type="button" variant="ghost" onClick={onClose} className="text-white hover:bg-white/10 rounded-lg">
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={onClose}
+              className="text-white hover:bg-white/10 rounded-lg"
+            >
               Cancel
             </Button>
             <Button
               type="submit"
-              className={`bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-500 hover:to-amber-600 text-indigo-900 font-bold rounded-lg ${isSubmitting ? "opacity-80" : ""}`}
+              className={`bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-500 hover:to-amber-600 text-indigo-900 font-bold rounded-lg ${
+                isSubmitting ? "opacity-80" : ""
+              }`}
               disabled={!answer.trim() || isSubmitting}
             >
               {isSubmitting ? (
@@ -82,6 +120,5 @@ export default function AnswerModal({ isOpen, onClose, booth, onSubmit }) {
         </form>
       </DialogContent>
     </Dialog>
-  )
+  );
 }
-
