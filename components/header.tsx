@@ -6,8 +6,11 @@ import { useState } from "react"
 
 import { Button } from "@/components/ui/button"
 
-export default function Header() {
-  const [points, setPoints] = useState(0)
+type HeaderProps = {
+  score: number;
+};
+
+export default function Header({score}: HeaderProps) {
 
   return (
     <header className="sticky top-0 z-10 bg-gradient-to-r from-violet-700 to-indigo-700 shadow-md">
@@ -28,7 +31,7 @@ export default function Header() {
             </Link>
 
             <div className="flex items-center justify-center bg-white/10 backdrop-blur-sm rounded-full px-3 py-1.5">
-              <div className="text-amber-300 font-bold">{points} pts</div>
+              <div className="text-amber-300 font-bold">{score} pts</div>
             </div>
           </div>
         </div>

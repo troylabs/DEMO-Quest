@@ -30,7 +30,7 @@ export async function POST(req: NextRequest) {
         diags: new Set(user.currentGame.completedDiags),
     }
     
-    const result = checkBingo(user.currentGame.marked, prev)
+    const result = checkBingo(user.currentGame.marked, prev);
 
     user.currentGame.completedRows.push(...result.newBingos.filter(b => b.type === 'row').map(b => b.index))
     user.currentGame.completedCols.push(...result.newBingos.filter(b => b.type === 'col').map(b => b.index))
@@ -38,9 +38,13 @@ export async function POST(req: NextRequest) {
 
     await user.save()
 
+    const allMarked = user.currentGame.marked = user.currentGame.marked || [];
+    allMarked.push(12);
+    
+
     return NextResponse.json({
         newScore: result.score,
         newLines: result.newBingos.map(line => line.index),
-        allMarked: user.currentGame.marked,
+        allMarked: allMarked,
     })
 }

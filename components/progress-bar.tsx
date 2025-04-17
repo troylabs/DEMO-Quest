@@ -1,21 +1,17 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
+type ProgressBarProps = {
+  progress: number;
+};
 
-export default function ProgressBar() {
-  const [progress, setProgress] = useState(0)
-
-  // This would be connected to actual completion data in a real implementation
-  useEffect(() => {
-    // Simulate progress for demo purposes
-    setProgress(0)
-  }, [])
-
+export default function ProgressBar({ progress }: ProgressBarProps) {
   return (
     <div className="mb-6 mt-2">
       <div className="flex justify-between items-center mb-2">
         <span className="text-sm font-medium text-white/80">Your Progress</span>
-        <span className="text-sm font-bold text-white">{progress}/24 Booths</span>
+        <span className="text-sm font-bold text-white">
+          {progress}/24 Booths
+        </span>
       </div>
       <div className="w-full h-3 bg-white/20 rounded-full overflow-hidden">
         <div
@@ -25,9 +21,10 @@ export default function ProgressBar() {
       </div>
 
       {progress === 0 && (
-        <div className="mt-2 text-center animate-pulse text-white/80 text-sm">Tap a booth to get started!</div>
+        <div className="mt-2 text-center animate-pulse text-white/80 text-sm">
+          Tap a booth to get started!
+        </div>
       )}
     </div>
-  )
+  );
 }
-
