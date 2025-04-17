@@ -7,9 +7,22 @@ import confetti from "canvas-confetti";
 import { Card } from "@/components/ui/card";
 import AnswerModal from "./answer-modal";
 import { staticBingoCard } from "@/lib/bingo-utils"; // shared card
-import { getUserId } from "@/lib/auth-utils"; // custom utility that returns user ID string
 
-export default function BingoCard() {
+type FetchDataReturn = {
+  id: string | null;
+  data: any; // or be more specific if you know the shape
+};
+
+type BingoCardProps = {
+  fetchData: () => Promise<FetchDataReturn>;
+  sendResult: (
+    userId: string,
+    boothIndex: number,
+    answer: string
+  ) => Promise<any>;
+};
+
+export default function BingoCard({ fetchData, sendResult }: BingoCardProps) {
   const [bingoCard] = useState(staticBingoCard); //change so that all users have same bingo
   const [marked, setMarked] = useState<number[]>([12]); //free box is always marked
   const [selectedBooth, setSelectedBooth] = useState<null | {
@@ -27,15 +40,15 @@ export default function BingoCard() {
     const fetchProgress = async () => {
       try {
         setIsLoading(true);
-        const id = await getUserId();
+
+        const { id, data } = await fetchData();
+
         if (!id) {
           console.error("No user ID found");
           return;
         }
         setUserId(id);
 
-        const res = await fetch(`/api/bingo/progress?userId=${id}`);
-        const data = await res.json();
         // Ensure free box (12) is always included in marked squares
         const markedSquares = new Set([...(data.allMarked || []), 12]);
         setMarked(Array.from(markedSquares));
@@ -74,27 +87,10 @@ export default function BingoCard() {
       throw new Error("No booth selected");
     }
 
-    console.log("Making POST request to /api/bingo/check");
-    const res = await fetch("/api/bingo/check", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        userId: userId,
-        boothIndex: selectedBooth.index,
-        answer: answer,
-      }),
-    });
-
-    console.log("Response received:", res.status);
-    const data = await res.json();
-    console.log("Response data:", data);
-
-    if (!res.ok) {
-      throw new Error(data.error || "Something went wrong");
-    }
+    const data = await sendResult(userId, selectedBooth.index, answer);
 
     // Ensure free box (12) is always included in marked squares
-    const markedSquares = new Set([...(data.allMarked || []), 12]);
+    const markedSquares = new Set([...(data.allMarked || [])]);
     setMarked(Array.from(markedSquares));
 
     setBingoLines((prev) => {
@@ -146,8 +142,8 @@ export default function BingoCard() {
                 marked.includes(index)
                   ? "bg-gradient-to-br from-amber-400 to-amber-500 text-indigo-900"
                   : booth
-                    ? "bg-white/10 hover:bg-white/15 cursor-pointer"
-                    : ""
+                  ? "bg-white/10 hover:bg-white/15 cursor-pointer"
+                  : ""
               }
               ${isPartOfBingoLine(index) ? "ring-2 ring-white" : ""}
             `}
