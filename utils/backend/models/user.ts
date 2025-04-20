@@ -9,6 +9,7 @@ const userSchema = new Schema<UserData>(
     name: { type: String },
     currentGame: {
       marked: [Number],
+      tried: [Number],
       completedRows: [Number],
       completedCols: [Number],
       completedDiags: [Number],

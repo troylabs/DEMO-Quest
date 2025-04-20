@@ -34,7 +34,12 @@ export async function POST(req: NextRequest) {
         // set cookie
         let expireIn3Days = new Date()
         expireIn3Days.setDate(expireIn3Days.getDate() + 3)
-        response.cookies.set('questToken', token, { httpOnly: true, expires: expireIn3Days, sameSite: 'none', secure: true });
+        response.cookies.set('questToken', token, { 
+            httpOnly: true, 
+            expires: expireIn3Days, 
+            sameSite: 'lax', 
+            secure: process.env.NODE_ENV === 'production' 
+        });
         
         return response
     } catch (error){

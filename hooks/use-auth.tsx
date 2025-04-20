@@ -57,6 +57,7 @@ function useProvideAuth() {
         headers: {
           "Content-Type": "application/json",
         },
+        credentials: "include",
       });
       const data = await response.json();
       if (response.ok) {
@@ -80,6 +81,7 @@ function useProvideAuth() {
         headers: {
           "Content-Type": "application/json",
         },
+        credentials: "include",
       });
       const data = await response.json();
       if (response.ok) {
@@ -94,8 +96,19 @@ function useProvideAuth() {
     }
   };
 
-  const logout = () => {
-    console.log("logout logic");
+  const logout = async () => {
+    try {
+      const response = await fetch("/api/auth/logout", {
+        method: "POST",
+        credentials: "include",
+      });
+      if (response.ok) {
+        setUser(null);
+        window.location.href = "/"; // Redirect to login page
+      }
+    } catch (error) {
+      console.error("Error logging out", error);
+    }
   };
 
   return {

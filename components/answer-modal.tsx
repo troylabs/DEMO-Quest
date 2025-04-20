@@ -12,12 +12,13 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Textarea } from "@/components/ui/textarea";
 
 interface Booth {
   index: number;
   name: string;
   question?: string;
+  options?: string[];
+  correctAnswer?: string;
 }
 
 interface AnswerModalProps {
@@ -33,34 +34,46 @@ export default function AnswerModal({
   booth,
   onSubmit,
 }: AnswerModalProps) {
-  const [answer, setAnswer] = useState("");
+  const [selected, setSelected] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [locked, setLocked] = useState(false);
 
-  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (answer.trim()) {
-      setIsSubmitting(true);
-      setError(null);
-      try {
-        await onSubmit(answer.trim());
-        setAnswer("");
-        onClose(); // Close the modal after successful submission
-      } catch (error) {
-        console.error("Error submitting answer:", error);
-        setError(
-          error instanceof Error ? error.message : "Failed to submit answer"
-        );
-      } finally {
-        setIsSubmitting(false);
-      }
+    if (!selected || !booth?.correctAnswer) return;
+
+    setIsSubmitting(true);
+    const isCorrect = selected.charAt(0) === booth.correctAnswer;
+    setLocked(true);
+
+    if (!isCorrect) {
+      setError("That's not correct");
+    }
+
+    console.log("Selected:", selected);
+    console.log("Correct Answer:", booth.correctAnswer);
+
+    await new Promise((r) => setTimeout(r, 100));
+    onSubmit(selected.charAt(0));
+    setIsSubmitting(false);
+
+    if (isCorrect) {
+      onClose();
     }
   };
 
-  if (!booth) return null;
+  const handleClose = () => {
+    setSelected("");
+    setLocked(false);
+    setError(null);
+    onClose();
+  };
+
+  if (!booth || !booth.options || !booth.correctAnswer) return null;
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-md border-none bg-gradient-to-b from-indigo-900 to-violet-950 text-white rounded-xl">
         <DialogHeader>
           <DialogTitle className="text-white text-xl">{booth.name}</DialogTitle>
@@ -74,35 +87,55 @@ export default function AnswerModal({
               <p className="font-medium mb-1 text-amber-300">Question:</p>
               <p className="text-white">{booth.question}</p>
             </div>
+
+            <div className="space-y-2">
+              {booth.options.map((option, idx) => {
+                const choice = option;
+                return (
+                  <div
+                    key={idx}
+                    className={`p-2 rounded-lg cursor-pointer border transition
+                      ${
+                        locked
+                          ? choice.charAt(0) === booth.correctAnswer
+                            ? "bg-green-500/20 border-green-400"
+                            : selected === choice
+                              ? "bg-red-500/20 border-red-400"
+                              : "opacity-60"
+                          : selected === choice
+                            ? "bg-white/20 border-white/20"
+                            : "hover:bg-white/10 border-white/20"
+                      }
+                    `}
+                    onClick={() => !locked && setSelected(choice)}
+                  >
+                    {option}
+                  </div>
+                );
+              })}
+            </div>
             {error && (
               <div className="bg-red-500/10 text-red-300 p-3 rounded-lg flex items-center gap-2 text-sm">
                 <AlertCircle className="h-4 w-4" />
                 {error}
               </div>
             )}
-            <Textarea
-              placeholder="Type your answer here..."
-              value={answer}
-              onChange={(e) => setAnswer(e.target.value)}
-              className="min-h-[120px] bg-white/10 border-white/20 text-white placeholder:text-white/50 focus-visible:ring-amber-400 rounded-lg"
-              required
-            />
           </div>
           <DialogFooter className="mt-4">
             <Button
               type="button"
               variant="ghost"
-              onClick={onClose}
+              onClick={handleClose}
               className="text-white hover:bg-white/10 rounded-lg"
             >
               Cancel
             </Button>
             <Button
               type="submit"
+              disabled={!selected || isSubmitting || locked}
               className={`bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-500 hover:to-amber-600 text-indigo-900 font-bold rounded-lg ${
                 isSubmitting ? "opacity-80" : ""
               }`}
-              disabled={!answer.trim() || isSubmitting}
             >
               {isSubmitting ? (
                 <div className="flex items-center gap-2">

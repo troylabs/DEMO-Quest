@@ -10,13 +10,13 @@ export default function ProgressBar({ progress }: ProgressBarProps) {
       <div className="flex justify-between items-center mb-2">
         <span className="text-sm font-medium text-white/80">Your Progress</span>
         <span className="text-sm font-bold text-white">
-          {progress}/24 Booths
+          {progress}/25 Booths
         </span>
       </div>
       <div className="w-full h-3 bg-white/20 rounded-full overflow-hidden">
         <div
           className="h-full bg-gradient-to-r from-amber-400 to-amber-300 rounded-full transition-all duration-500 ease-out"
-          style={{ width: `${(progress / 24) * 100}%` }}
+          style={{ width: `${(progress / 25) * 100}%` }}
         />
       </div>
 

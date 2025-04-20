@@ -6,7 +6,7 @@ import confetti from "canvas-confetti";
 
 import { Card } from "@/components/ui/card";
 import AnswerModal from "./answer-modal";
-import { staticBingoCard } from "@/lib/bingo-utils"; // shared card
+import { staticBingoCard } from "@/lib/board1"; // shared card
 
 type FetchDataReturn = {
   id: string | null;
@@ -24,17 +24,23 @@ type BingoCardProps = {
 
 export default function BingoCard({ fetchData, sendResult }: BingoCardProps) {
   const [bingoCard] = useState(staticBingoCard); //change so that all users have same bingo
-  const [marked, setMarked] = useState<number[]>([12]); //free box is always marked
+  const [marked, setMarked] = useState<number[]>([]); //free box is always marked
   const [selectedBooth, setSelectedBooth] = useState<null | {
     index: number;
     name: string;
     question?: string;
+    correctAnswer: string;
   }>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [bingoLines, setBingoLines] = useState<number[][]>([]);
   const [userId, setUserId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [showCongrats, setShowCongrats] = useState(false);
+  const [lastAnswer, setLastAnswer] = useState<string | null>(null);
+  const [lastAnsweredIndex, setLastAnsweredIndex] = useState<number | null>(
+    null
+  );
+  const [tried, setTried] = useState<number[]>([]);
 
   useEffect(() => {
     const fetchProgress = async () => {
@@ -44,17 +50,37 @@ export default function BingoCard({ fetchData, sendResult }: BingoCardProps) {
         const { id, data } = await fetchData();
 
         if (!id) {
-          console.error("No user ID found");
+          console.error("No user ID found - redirecting to login");
+          window.location.href = "/"; // Redirect to login page
           return;
         }
         setUserId(id);
 
-        // Ensure free box (12) is always included in marked squares
-        const markedSquares = new Set([...(data.allMarked || []), 12]);
-        setMarked(Array.from(markedSquares));
-        setBingoLines(data.completedLines || []);
+        // Initialize from user's current game state if available
+        if (data.currentGame) {
+          setMarked(data.currentGame.marked || []);
+          setTried(data.currentGame.tried || []);
+          setBingoLines([
+            ...(data.currentGame.completedRows || []).map((r: number) =>
+              Array.from({ length: 5 }, (_, i) => r * 5 + i)
+            ),
+            ...(data.currentGame.completedCols || []).map((c: number) =>
+              Array.from({ length: 5 }, (_, i) => i * 5 + c)
+            ),
+            ...(data.currentGame.completedDiags || []).map((d: number) =>
+              d === 0 ? [0, 6, 12, 18, 24] : [4, 8, 12, 16, 20]
+            ),
+          ]);
+        } else {
+          const markedSquares = new Set([...(data.allMarked || [])]);
+          const triedSquares = new Set([...(data.tried || [])]);
+          setMarked(Array.from(markedSquares));
+          setTried(Array.from(triedSquares));
+          setBingoLines(data.completedLines || []);
+        }
       } catch (error) {
         console.error("Error fetching progress:", error);
+        window.location.href = "/"; // Redirect to login page on error
       } finally {
         setIsLoading(false);
       }
@@ -67,8 +93,13 @@ export default function BingoCard({ fetchData, sendResult }: BingoCardProps) {
     index: number;
     name: string;
     question?: string;
+    correctAnswer: string;
   }) => {
-    if (booth && !marked.includes(booth.index)) {
+    if (
+      booth &&
+      !marked.includes(booth.index) &&
+      !tried.includes(booth.index)
+    ) {
       if (navigator.vibrate) navigator.vibrate(50);
       setSelectedBooth(booth);
       setIsModalOpen(true);
@@ -76,49 +107,44 @@ export default function BingoCard({ fetchData, sendResult }: BingoCardProps) {
   };
 
   const handleAnswerSubmit = async (answer: string) => {
-    console.log("handleAnswerSubmit called with answer:", answer);
-    if (!userId) {
-      console.error("No user ID available");
-      throw new Error("No user ID available");
+    if (!userId || !selectedBooth) {
+      console.error("No user ID or booth selected");
+      throw new Error("No user ID or booth selected");
     }
 
-    if (!selectedBooth) {
-      console.error("No booth selected");
-      throw new Error("No booth selected");
-    }
+    setLastAnswer(answer);
+    setLastAnsweredIndex(selectedBooth.index);
 
-    const data = await sendResult(userId, selectedBooth.index, answer);
+    setTried((prev) => [...prev, selectedBooth.index]);
 
-    // Ensure free box (12) is always included in marked squares
-    const markedSquares = new Set([...(data.allMarked || [])]);
-    setMarked(Array.from(markedSquares));
+    if (answer === selectedBooth.correctAnswer) {
+      const data = await sendResult(userId, selectedBooth.index, answer);
+      const markedSquares = new Set([...(data.allMarked || [])]);
+      setMarked(Array.from(markedSquares));
 
-    setBingoLines((prev) => {
-      const newLineArrays = data.newLines.map((lineIndex: number) => {
-        if (lineIndex === 0) return [0, 6, 12, 18, 24]; // diag TL → BR
-        if (lineIndex === 1) return [4, 8, 12, 16, 20]; // diag TR → BL
+      const newLines = data.newLines.map((lineIndex: number) => {
+        if (lineIndex === 0) return [0, 6, 12, 18, 24];
+        if (lineIndex === 1) return [4, 8, 12, 16, 20];
         if (lineIndex >= 0 && lineIndex <= 4)
-          return Array.from({ length: 5 }, (_, i) => lineIndex * 5 + i); // rows
+          return Array.from({ length: 5 }, (_, i) => lineIndex * 5 + i);
         if (lineIndex >= 5 && lineIndex <= 9)
-          return Array.from({ length: 5 }, (_, i) => i * 5 + (lineIndex - 5)); // cols
-        return []; // fallback
+          return Array.from({ length: 5 }, (_, i) => i * 5 + (lineIndex - 5));
+        return [];
       });
-      return [...prev, ...newLineArrays];
-    });
 
-    //trigger confetti
-    if (data.newScore > 0) {
+      setBingoLines((prev) => [...prev, ...newLines]);
       confetti({
         particleCount: 100,
         spread: 70,
         origin: { y: 0.6 },
       });
 
-      // Show congratulations message for 10 seconds
-      setShowCongrats(true);
-      setTimeout(() => {
-        setShowCongrats(false);
-      }, 5000);
+      if (newLines.length > 0) {
+        setShowCongrats(true);
+        setTimeout(() => {
+          setShowCongrats(false);
+        }, 5000);
+      }
     }
   };
 
@@ -135,18 +161,19 @@ export default function BingoCard({ fetchData, sendResult }: BingoCardProps) {
               key={index}
               onClick={() => booth && handleBoothClick({ ...booth, index })}
               className={`
-              aspect-square flex flex-col items-center justify-center p-1 rounded-lg text-center
-              transition-all duration-300 relative overflow-hidden
-              ${booth ? "active:scale-95 touch-manipulation" : "bg-white/5"}
-              ${
-                marked.includes(index)
-                  ? "bg-gradient-to-br from-amber-400 to-amber-500 text-indigo-900"
-                  : booth
-                  ? "bg-white/10 hover:bg-white/15 cursor-pointer"
-                  : ""
-              }
-              ${isPartOfBingoLine(index) ? "ring-2 ring-white" : ""}
-            `}
+                aspect-square flex flex-col items-center justify-center p-1 rounded-lg text-center
+                transition-all duration-300 relative overflow-hidden
+                ${booth ? "active:scale-95 touch-manipulation" : "bg-white/5"}
+                ${
+                  tried.includes(index)
+                    ? marked.includes(index)
+                      ? "bg-gradient-to-br from-amber-400 to-amber-500 text-indigo-900"
+                      : "bg-red-600/60 border-red-300 text-white cursor-not-allowed"
+                    : booth
+                      ? "bg-white/10 hover:bg-white/15 cursor-pointer"
+                      : ""
+                }
+              `}
             >
               {booth ? (
                 <>
@@ -162,12 +189,7 @@ export default function BingoCard({ fetchData, sendResult }: BingoCardProps) {
                     </div>
                   )}
                 </>
-              ) : (
-                <div className="flex flex-col items-center justify-center h-full">
-                  <Sparkles className="h-5 w-5 text-amber-300 mb-1" />
-                  <div className="text-[10px] text-white/70">FREE</div>
-                </div>
-              )}
+              ) : null}
             </div>
           ))}
         </div>

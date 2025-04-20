@@ -2,10 +2,11 @@ import { NextRequest, NextResponse } from "next/server";
 import { dbConnect } from "@/utils/db";
 import UserModel from "@/utils/backend/models/user";
 import { checkBingo, PreviousBingos } from "@/lib/checkBingo";
+import { staticBingoCard } from "@/lib/board1";
 
 export async function POST(req: NextRequest) {
   const body = await req.json();
-  const { userId, boothIndex } = body;
+  const { userId, boothIndex, answer } = body;
 
   await dbConnect();
   const user = await UserModel.findById(userId);
@@ -13,16 +14,29 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "User not found " }, { status: 404 });
 
   if (!user.currentGame) {
-    return NextResponse.json({ error: "No active game" }, { status: 400 });
+    user.currentGame = {
+      marked: [],
+      tried: [],
+      completedRows: [],
+      completedCols: [],
+      completedDiags: [],
+      score: 0
+    };
   }
 
-  if (user.currentGame.marked.includes(boothIndex)) {
-    return NextResponse.json({ error: "Already marked" }, { status: 400 });
+  // Always add to tried array regardless of correct/incorrect
+  if (!user.currentGame.tried.includes(boothIndex)) {
+    user.currentGame.tried.push(boothIndex);
   }
 
-  //add new booth
-  user.currentGame.marked.push(boothIndex);
-  console.log("Received boothIndex:", boothIndex);
+  // Get the correct answer from the booth data
+  const booth = staticBingoCard[boothIndex];
+  const isCorrect = booth && answer === booth.correctAnswer;
+
+  // Only add to marked if correct answer
+  if (isCorrect && !user.currentGame.marked.includes(boothIndex)) {
+    user.currentGame.marked.push(boothIndex);
+  }
 
   const prev: PreviousBingos = {
     rows: new Set(user.currentGame.completedRows),
@@ -50,12 +64,10 @@ export async function POST(req: NextRequest) {
 
   await user.save();
 
-  const allMarked = (user.currentGame.marked = user.currentGame.marked || []);
-  allMarked.push(12);
-
   return NextResponse.json({
     newScore: score,
     newLines: result.newBingos.map((line) => line.index),
-    allMarked: allMarked,
+    allMarked: user.currentGame.marked,
+    tried: user.currentGame.tried,
   });
 }
