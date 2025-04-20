@@ -1,6 +1,6 @@
 import { dbConnect } from "@/utils/db";
 import UserModel from '@/utils/backend/models/user';
-import { hashSync, genSaltSync } from "bcrypt";
+import { hashSync, genSaltSync } from "bcryptjs";
 import { sign } from "jsonwebtoken";
 import { NextRequest, NextResponse } from "next/server";
 
