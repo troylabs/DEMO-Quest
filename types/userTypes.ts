@@ -6,6 +6,7 @@ export type UserData = {
   name: string;
   currentGame?: {
     marked: number[];
+    tried: number[];
     completedRows: number[];
     completedCols: number[];
     completedDiags: number[];

@@ -16,7 +16,7 @@ export default function BingoContainer() {
     const data = await res.json();
 
     //updating values
-    setProgress(data.allMarked.length-1);
+    setProgress(data.allMarked.length);
     setScore(data.score);
 
     return { id, data };
@@ -36,6 +36,7 @@ export default function BingoContainer() {
         boothIndex: boothIndex,
         answer: answer,
       }),
+      credentials: "include",
     });
 
     console.log("Response received:", res.status);
@@ -47,10 +48,13 @@ export default function BingoContainer() {
     }
 
     //updating values
-    setProgress(data.allMarked.length-1);
+    setProgress(data.allMarked.length);
     setScore(data.newScore);
 
-    return data;
+    return {
+      ...data,
+      tried: data.tried || [],
+    };
   };
 
   return (

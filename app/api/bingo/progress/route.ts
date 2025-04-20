@@ -6,7 +6,7 @@ export async function GET(req: NextRequest) {
   //making sure user logged in
   const userId = req.nextUrl.searchParams.get("userId");
   if (!userId) {
-    return NextResponse.json({ error: "User ID is required" }, { status: 400 });
+    return NextResponse.json({ error: "No user ID provided" }, { status: 400 });
   }
 
   //connecting to database
@@ -19,7 +19,8 @@ export async function GET(req: NextRequest) {
   if (!user.currentGame) {
     // If no game exists, return empty arrays but include the free box
     return NextResponse.json({
-      allMarked: [12],
+      allMarked: [],
+      tried: [],
       completedLines: [],
     });
   }
@@ -37,15 +38,13 @@ export async function GET(req: NextRequest) {
     ),
   ];
 
-  // Ensure the free box (12) is always included in marked squares
-  const markedSquares = new Set([...user.currentGame.marked, 12]);
-
-  //get score
-  const score = user.currentGame.score;
+  const markedSquares = new Set([...user.currentGame.marked]);
+  const triedSquares = new Set([...user.currentGame.tried]);
 
   return NextResponse.json({
     allMarked: Array.from(markedSquares),
+    tried: Array.from(triedSquares),
     completedLines,
-    score: score,
+    score: user.currentGame.score
   });
 }
