@@ -75,10 +75,10 @@ export default function LoginPage() {
       <div className="flex-1 px-4 pb-8">
         <Tabs defaultValue="login" className="w-full max-w-md mx-auto">
           <TabsList className="grid w-full grid-cols-2 bg-white/10 backdrop-blur-sm">
-            <TabsTrigger value="login" className="data-[state=active]:bg-white/20">
+            <TabsTrigger value="login" className="text-gray-200 data-[state=active]:bg-white/20 data-[state=active]:text-gray-200">
               Login
             </TabsTrigger>
-            <TabsTrigger value="signup" className="data-[state=active]:bg-white/20">
+            <TabsTrigger value="signup" className="text-gray-200 data-[state=active]:bg-white/20 data-[state=active]:text-gray-200">
               Sign Up
             </TabsTrigger>
           </TabsList>

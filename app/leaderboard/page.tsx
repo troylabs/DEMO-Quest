@@ -99,12 +99,9 @@ export default async function LeaderboardPage() {
                       <div className="w-6 h-6 rounded-full bg-white/10 flex items-center justify-center text-xs font-bold text-white/80">
                         {index + 4}
                       </div>
-                      <div className="font-medium">{user.name}</div>
+                      <div className="font-medium text-gray-100">{user.name}</div>
                     </div>
                     <div className="flex items-center gap-2">
-                      <div className="text-xs text-white/60">
-                        {user.completedSquares} booths
-                      </div>
                       <div className="font-bold text-amber-300">
                         {user.points}
                       </div>

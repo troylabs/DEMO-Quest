@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, FormEvent } from "react";
+import { useState, useEffect } from "react";
 import { Send, AlertCircle } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -34,6 +34,14 @@ export default function AnswerModal({
   booth,
   onSubmit,
 }: AnswerModalProps) {
+  // ...existing state
+  useEffect(() => {
+    if (isOpen) {
+      setSelected("");
+      setLocked(false);
+      setError(null);
+    }
+  }, [isOpen, booth?.index]);
   const [selected, setSelected] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
