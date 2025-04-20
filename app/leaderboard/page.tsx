@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import { ArrowLeft, Medal, Trophy, Users } from "lucide-react";
 import Link from "next/link";
 import getLeaderboardData from "@/lib/getLeaderboard";
