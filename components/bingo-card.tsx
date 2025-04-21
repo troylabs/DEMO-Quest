@@ -28,14 +28,17 @@ type BingoCardProps = {
     answer: string
   ) => Promise<any>;
   bingoCard: Booth[];
+  allMarked?: number[]; 
+  tried?: number[];
 };
 
 export default function BingoCard({
   fetchData,
   sendResult,
   bingoCard,
+  allMarked: initialMarked,
+  tried: initialTried,
 }: BingoCardProps) {
-  const [marked, setMarked] = useState<number[]>([]); //free box is always marked
   const [selectedBooth, setSelectedBooth] = useState<null | {
     index: number;
     name: string;
@@ -51,7 +54,8 @@ export default function BingoCard({
   const [lastAnsweredIndex, setLastAnsweredIndex] = useState<number | null>(
     null
   );
-  const [tried, setTried] = useState<number[]>([]);
+  const [marked, setMarked] = useState<number[]>(initialMarked || []);
+  const [tried, setTried] = useState<number[]>(initialTried || []);
 
   useEffect(() => {
     const fetchProgress = async () => {
@@ -86,6 +90,12 @@ export default function BingoCard({
     fetchProgress();
   }, []);
 
+  // This effect runs when the component mounts and when initialMarked/initialTried change
+  useEffect(() => {
+    if (initialMarked) setMarked(initialMarked);
+    if (initialTried) setTried(initialTried);
+  }, [initialMarked, initialTried]);
+
   const handleBoothClick = (booth: {
     index: number;
     name: string;
@@ -117,7 +127,10 @@ export default function BingoCard({
     if (answer === selectedBooth.correctAnswer) {
       const data = await sendResult(userId, selectedBooth.index, answer);
       const markedSquares = new Set([...(data.allMarked || [])]);
+      const triedSquares = new Set([...(data.tried || [])]);  // Add this line
+
       setMarked(Array.from(markedSquares));
+      setTried(Array.from(triedSquares));
 
       // Only update bingo lines if new lines were completed
       if (data.newLines && data.newLines.length > 0) {
@@ -145,6 +158,9 @@ export default function BingoCard({
           setShowCongrats(false);
         }, 5000);
       }
+    } else {
+      // For wrong answers, still send the result to be saved
+      await sendResult(userId, selectedBooth.index, answer);
     }
   };
 

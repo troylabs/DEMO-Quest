@@ -14,6 +14,8 @@ export default function BingoContainer() {
   const [totalScore, setTotalScore] = useState(0);
   const [activeBoard, setActiveBoard] = useState<"board1" | "board2">("board1");
   const [key, setKey] = useState(0); // Add a key to force re-render of BingoCard
+  const [allMarked, setAllMarked] = useState<number[]>([]);
+  const [tried, setTried] = useState<number[]>([]);
 
   const fetchData = async () => {
     const id = await getUserId();
@@ -42,6 +44,8 @@ export default function BingoContainer() {
 
     //updating values
     setProgress(data.allMarked.length);
+    setAllMarked(data.allMarked);
+    setTried(data.tried);
     setScore(data.score);
     setTotalScore(combinedScore);
 
@@ -92,6 +96,8 @@ export default function BingoContainer() {
 
     //updating values
     setProgress(data.allMarked.length);
+    setAllMarked(data.allMarked);
+    setTried(data.tried);
     setScore(data.newScore);
     setTotalScore(combinedScore);
 
@@ -126,6 +132,8 @@ export default function BingoContainer() {
           fetchData={fetchData}
           sendResult={sendResult}
           bingoCard={activeBoard === "board1" ? board1 : board2}
+          allMarked={allMarked}
+          tried={tried}
         />
       </div>
     </div>
