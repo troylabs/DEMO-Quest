@@ -11,16 +11,15 @@ interface User {
 
 export default async function getLeaderboardData(): Promise<User[]> {
   try {
-    //get top users
     await dbConnect();
-
-    const topUsers = await user
-      .find()
-      .sort({ "games.board1.score": -1, "games.board2.score": -1, "updatedAt": 1 })
-      .limit(50);
-
-    const top_users: User[] = [];
-    for (const user_data of topUsers) {
+    
+    const allUsers = await user.find();
+    
+    const processedUsers: User[] = [];
+    for (const user_data of allUsers) {
+      // Skip users with no name
+      if (!user_data.name) continue;
+      
       const id = user_data._id.toString();
       const name = user_data.name;
       
@@ -47,7 +46,7 @@ export default async function getLeaderboardData(): Promise<User[]> {
         
       const totalBingos = board1Bingos + board2Bingos;
       
-      top_users.push({
+      processedUsers.push({
         id: id,
         name: name,
         points: totalScore,
@@ -55,8 +54,17 @@ export default async function getLeaderboardData(): Promise<User[]> {
         bingos: totalBingos,
       });
     }
-
-    // Pad with dummy entries until we have exactly 3
+    
+    const sortedUsers = processedUsers.sort((a, b) => {
+      if (b.points !== a.points) {
+        return b.points - a.points; 
+      }
+      // If points are equal, sort alphabetically by name as a tiebreaker
+      return a.name.localeCompare(b.name);
+    });
+    
+    const top_users = sortedUsers.slice(0, 50);
+    
     while (top_users.length < 3) {
       const idx = top_users.length + 1;
       top_users.push({
@@ -67,7 +75,7 @@ export default async function getLeaderboardData(): Promise<User[]> {
         bingos: 0,
       });
     }
-
+    
     return top_users;
   } catch (error) {
     console.error("Error fetching leaderboard data:", error);
