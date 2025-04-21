@@ -1,7 +1,7 @@
 import user from "@/utils/backend/models/user";
 
 interface User {
-  id: number;
+  id: string;
   name: string;
   points: number;
   completedSquares: number;
@@ -17,7 +17,7 @@ export default async function getLeaderboardData(): Promise<User[]> {
 
   const top_users: User[] = [];
   for (const user_data of topUsers) {
-    const id = user_data._id;
+    const id = user_data._id.toString();
     const name = user_data.name;
     
     // Calculate total score from both boards
