@@ -56,7 +56,7 @@ export default async function getLeaderboardData(): Promise<User[]> {
   while (top_users.length < 3) {
     const idx = top_users.length + 1;
     top_users.push({
-      id: idx,
+      id: idx.toString(),
       name: "???",
       points: 0,
       completedSquares: 0,
