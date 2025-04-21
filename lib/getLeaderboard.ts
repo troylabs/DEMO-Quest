@@ -12,25 +12,43 @@ export default async function getLeaderboardData(): Promise<User[]> {
   //get top users
   const topUsers = await user
     .find()
-    .sort({ "currentGame.score": -1, "updatedAt": 1 })
+    .sort({ "games.board1.score": -1, "games.board2.score": -1, "updatedAt": 1 })
     .limit(50);
 
   const top_users: User[] = [];
   for (const user_data of topUsers) {
     const id = user_data._id;
     const name = user_data.name;
-    const score = user_data.currentGame?.score ?? 0;
-    const completedSquares = user_data.currentGame?.marked;
-    const bingos =
-      (user_data.currentGame?.completedCols?.length ?? 0) +
-      (user_data.currentGame?.completedDiags?.length ?? 0) +
-      (user_data.currentGame?.completedRows?.length ?? 0);
+    
+    // Calculate total score from both boards
+    const board1Score = user_data.games?.board1?.score ?? 0;
+    const board2Score = user_data.games?.board2?.score ?? 0;
+    const totalScore = board1Score + board2Score;
+    
+    // Calculate total completed squares from both boards
+    const board1Squares = user_data.games?.board1?.marked?.length ?? 0;
+    const board2Squares = user_data.games?.board2?.marked?.length ?? 0;
+    const totalSquares = board1Squares + board2Squares;
+    
+    // Calculate total bingos from both boards
+    const board1Bingos = 
+      (user_data.games?.board1?.completedCols?.length ?? 0) +
+      (user_data.games?.board1?.completedDiags?.length ?? 0) +
+      (user_data.games?.board1?.completedRows?.length ?? 0);
+      
+    const board2Bingos = 
+      (user_data.games?.board2?.completedCols?.length ?? 0) +
+      (user_data.games?.board2?.completedDiags?.length ?? 0) +
+      (user_data.games?.board2?.completedRows?.length ?? 0);
+      
+    const totalBingos = board1Bingos + board2Bingos;
+    
     top_users.push({
       id: id,
       name: name,
-      points: score,
-      completedSquares: completedSquares,
-      bingos: bingos,
+      points: totalScore,
+      completedSquares: totalSquares,
+      bingos: totalBingos,
     });
   }
 
