@@ -105,10 +105,10 @@ export default function AnswerModal({
                     className={`p-2 rounded-lg cursor-pointer border transition
                       ${
                         locked
-                          ? choice.charAt(0) === booth.correctAnswer
-                            ? "bg-green-500/20 border-green-400"
+                          ? selected === choice && choice.charAt(0) === booth.correctAnswer
+                            ? "bg-green-500/20 border-green-400" 
                             : selected === choice
-                              ? "bg-red-500/20 border-red-400"
+                              ? "bg-red-500/20 border-red-400" 
                               : "opacity-60"
                           : selected === choice
                             ? "bg-white/20 border-white/20"
