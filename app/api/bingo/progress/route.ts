@@ -16,35 +16,42 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "User not found" }, { status: 404 });
   }
 
-  if (!user.currentGame) {
-    // If no game exists, return empty arrays but include the free box
+  // Get the board type from query params
+  const boardType = req.nextUrl.searchParams.get("boardType") || "board1";
+  
+  // Get the current game state based on board type
+  const currentGame = user.games?.[boardType];
+
+  if (!currentGame) {
+    // If no game exists, return empty arrays
     return NextResponse.json({
       allMarked: [],
       tried: [],
       completedLines: [],
+      score: 0
     });
   }
 
   // Get all completed lines
   const completedLines = [
-    ...user.currentGame.completedRows.map((row: number) =>
+    ...currentGame.completedRows.map((row: number) =>
       Array.from({ length: 5 }, (_, i) => row * 5 + i)
     ),
-    ...user.currentGame.completedCols.map((col: number) =>
+    ...currentGame.completedCols.map((col: number) =>
       Array.from({ length: 5 }, (_, i) => col + i * 5)
     ),
-    ...user.currentGame.completedDiags.map((diag: number) =>
+    ...currentGame.completedDiags.map((diag: number) =>
       diag === 0 ? [0, 6, 12, 18, 24] : [4, 8, 12, 16, 20]
     ),
   ];
 
-  const markedSquares = new Set([...user.currentGame.marked]);
-  const triedSquares = new Set([...user.currentGame.tried]);
+  const markedSquares = new Set([...currentGame.marked]);
+  const triedSquares = new Set([...currentGame.tried]);
 
   return NextResponse.json({
     allMarked: Array.from(markedSquares),
     tried: Array.from(triedSquares),
     completedLines,
-    score: user.currentGame.score
+    score: currentGame.score
   });
 }

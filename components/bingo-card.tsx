@@ -6,11 +6,18 @@ import confetti from "canvas-confetti";
 
 import { Card } from "@/components/ui/card";
 import AnswerModal from "./answer-modal";
-import { staticBingoCard } from "@/lib/board1"; // shared card
+
+type Booth = {
+  id: number;
+  name: string;
+  question?: string;
+  options?: string[];
+  correctAnswer: string;
+};
 
 type FetchDataReturn = {
   id: string | null;
-  data: any; // or be more specific if you know the shape
+  data: any;
 };
 
 type BingoCardProps = {
@@ -20,10 +27,14 @@ type BingoCardProps = {
     boothIndex: number,
     answer: string
   ) => Promise<any>;
+  bingoCard: Booth[];
 };
 
-export default function BingoCard({ fetchData, sendResult }: BingoCardProps) {
-  const [bingoCard] = useState(staticBingoCard); //change so that all users have same bingo
+export default function BingoCard({
+  fetchData,
+  sendResult,
+  bingoCard,
+}: BingoCardProps) {
   const [marked, setMarked] = useState<number[]>([]); //free box is always marked
   const [selectedBooth, setSelectedBooth] = useState<null | {
     index: number;
@@ -56,28 +67,14 @@ export default function BingoCard({ fetchData, sendResult }: BingoCardProps) {
         }
         setUserId(id);
 
-        // Initialize from user's current game state if available
-        if (data.currentGame) {
-          setMarked(data.currentGame.marked || []);
-          setTried(data.currentGame.tried || []);
-          setBingoLines([
-            ...(data.currentGame.completedRows || []).map((r: number) =>
-              Array.from({ length: 5 }, (_, i) => r * 5 + i)
-            ),
-            ...(data.currentGame.completedCols || []).map((c: number) =>
-              Array.from({ length: 5 }, (_, i) => i * 5 + c)
-            ),
-            ...(data.currentGame.completedDiags || []).map((d: number) =>
-              d === 0 ? [0, 6, 12, 18, 24] : [4, 8, 12, 16, 20]
-            ),
-          ]);
-        } else {
-          const markedSquares = new Set([...(data.allMarked || [])]);
-          const triedSquares = new Set([...(data.tried || [])]);
-          setMarked(Array.from(markedSquares));
-          setTried(Array.from(triedSquares));
-          setBingoLines(data.completedLines || []);
-        }
+        // Set data from the API response
+        const markedSquares = new Set([...(data.allMarked || [])]);
+        const triedSquares = new Set([...(data.tried || [])]);
+        setMarked(Array.from(markedSquares));
+        setTried(Array.from(triedSquares));
+
+        // Set bingo lines from the API response
+        setBingoLines(data.completedLines || []);
       } catch (error) {
         console.error("Error fetching progress:", error);
         window.location.href = "/"; // Redirect to login page on error
@@ -122,24 +119,27 @@ export default function BingoCard({ fetchData, sendResult }: BingoCardProps) {
       const markedSquares = new Set([...(data.allMarked || [])]);
       setMarked(Array.from(markedSquares));
 
-      const newLines = data.newLines.map((lineIndex: number) => {
-        if (lineIndex === 0) return [0, 6, 12, 18, 24];
-        if (lineIndex === 1) return [4, 8, 12, 16, 20];
-        if (lineIndex >= 0 && lineIndex <= 4)
-          return Array.from({ length: 5 }, (_, i) => lineIndex * 5 + i);
-        if (lineIndex >= 5 && lineIndex <= 9)
-          return Array.from({ length: 5 }, (_, i) => i * 5 + (lineIndex - 5));
-        return [];
-      });
+      // Only update bingo lines if new lines were completed
+      if (data.newLines && data.newLines.length > 0) {
+        const newLines = data.newLines.map((lineIndex: number) => {
+          if (lineIndex === 0) return [0, 6, 12, 18, 24];
+          if (lineIndex === 1) return [4, 8, 12, 16, 20];
+          if (lineIndex >= 0 && lineIndex <= 4)
+            return Array.from({ length: 5 }, (_, i) => lineIndex * 5 + i);
+          if (lineIndex >= 5 && lineIndex <= 9)
+            return Array.from({ length: 5 }, (_, i) => i * 5 + (lineIndex - 5));
+          return [];
+        });
 
-      setBingoLines((prev) => [...prev, ...newLines]);
-      confetti({
-        particleCount: 100,
-        spread: 70,
-        origin: { y: 0.6 },
-      });
+        setBingoLines((prev) => [...prev, ...newLines]);
 
-      if (newLines.length > 0) {
+        // Show confetti and congrats message only for new bingos
+        confetti({
+          particleCount: 100,
+          spread: 70,
+          origin: { y: 0.6 },
+        });
+
         setShowCongrats(true);
         setTimeout(() => {
           setShowCongrats(false);
