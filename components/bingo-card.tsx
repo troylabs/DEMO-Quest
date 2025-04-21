@@ -29,7 +29,6 @@ type BingoCardProps = {
   ) => Promise<any>;
   bingoCard: Booth[];
   allMarked?: number[]; 
-  tried?: number[];
 };
 
 export default function BingoCard({
@@ -37,7 +36,6 @@ export default function BingoCard({
   sendResult,
   bingoCard,
   allMarked: initialMarked,
-  tried: initialTried,
 }: BingoCardProps) {
   const [selectedBooth, setSelectedBooth] = useState<null | {
     index: number;
@@ -55,7 +53,8 @@ export default function BingoCard({
     null
   );
   const [marked, setMarked] = useState<number[]>(initialMarked || []);
-  const [tried, setTried] = useState<number[]>(initialTried || []);
+  const [tried, setTried] = useState<number[]>([]);
+  const [currentSessionTried, setCurrentSessionTried] = useState<number[]>([]);
 
   useEffect(() => {
     const fetchProgress = async () => {
@@ -75,7 +74,6 @@ export default function BingoCard({
         const markedSquares = new Set([...(data.allMarked || [])]);
         const triedSquares = new Set([...(data.tried || [])]);
         setMarked(Array.from(markedSquares));
-        setTried(Array.from(triedSquares));
 
         // Set bingo lines from the API response
         setBingoLines(data.completedLines || []);
@@ -90,11 +88,10 @@ export default function BingoCard({
     fetchProgress();
   }, []);
 
-  // This effect runs when the component mounts and when initialMarked/initialTried change
+  // This effect runs when the component mounts and when initialMarked change
   useEffect(() => {
     if (initialMarked) setMarked(initialMarked);
-    if (initialTried) setTried(initialTried);
-  }, [initialMarked, initialTried]);
+  }, [initialMarked]);
 
   const handleBoothClick = (booth: {
     index: number;
@@ -105,7 +102,7 @@ export default function BingoCard({
     if (
       booth &&
       !marked.includes(booth.index) &&
-      !tried.includes(booth.index)
+      !currentSessionTried.includes(booth.index)
     ) {
       if (navigator.vibrate) navigator.vibrate(50);
       setSelectedBooth(booth);
@@ -122,15 +119,12 @@ export default function BingoCard({
     setLastAnswer(answer);
     setLastAnsweredIndex(selectedBooth.index);
 
-    setTried((prev) => [...prev, selectedBooth.index]);
+    setCurrentSessionTried((prev) => [...prev, selectedBooth.index]);
 
     if (answer === selectedBooth.correctAnswer) {
       const data = await sendResult(userId, selectedBooth.index, answer);
       const markedSquares = new Set([...(data.allMarked || [])]);
-      const triedSquares = new Set([...(data.tried || [])]);  // Add this line
-
       setMarked(Array.from(markedSquares));
-      setTried(Array.from(triedSquares));
 
       // Only update bingo lines if new lines were completed
       if (data.newLines && data.newLines.length > 0) {
@@ -158,9 +152,6 @@ export default function BingoCard({
           setShowCongrats(false);
         }, 5000);
       }
-    } else {
-      // For wrong answers, still send the result to be saved
-      await sendResult(userId, selectedBooth.index, answer);
     }
   };
 
@@ -177,18 +168,18 @@ export default function BingoCard({
               key={index}
               onClick={() => booth && handleBoothClick({ ...booth, index })}
               className={`
-                aspect-square flex flex-col items-center justify-center p-1 rounded-lg text-center
-                transition-all duration-300 relative overflow-hidden
-                ${booth ? "active:scale-95 touch-manipulation" : "bg-white/5"}
-                ${
-                  tried.includes(index)
-                    ? marked.includes(index)
-                      ? "bg-gradient-to-br from-amber-400 to-amber-500 text-indigo-900"
-                      : "bg-red-600/60 border-red-300 text-white cursor-not-allowed"
+              aspect-square flex flex-col items-center justify-center p-1 rounded-lg text-center
+              transition-all duration-300 relative overflow-hidden
+              ${booth ? "active:scale-95 touch-manipulation" : "bg-white/5"}
+              ${
+                marked.includes(index)
+                  ? "bg-gradient-to-br from-amber-400 to-amber-500 text-indigo-900"
+                  : currentSessionTried.includes(index) && lastAnsweredIndex === index
+                    ? "bg-red-600/60 border-red-300 text-white"
                     : booth
                       ? "bg-white/10 hover:bg-white/15 cursor-pointer"
                       : ""
-                }
+              }
               `}
             >
               {booth ? (

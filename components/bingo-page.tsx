@@ -133,7 +133,6 @@ export default function BingoContainer() {
           sendResult={sendResult}
           bingoCard={activeBoard === "board1" ? board1 : board2}
           allMarked={allMarked}
-          tried={tried}
         />
       </div>
     </div>
