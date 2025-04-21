@@ -13,13 +13,26 @@ export default async function getLeaderboardData(): Promise<User[]> {
   try {
     await dbConnect();
     
-    const allUsers = await user.find();
+    // Use aggregation to calculate total scores and sort by them
+    const topUsers = await user.aggregate([
+      // Calculate combined board scores
+      { $addFields: {
+        totalScore: {
+          $add: [
+            { $ifNull: ["$games.board1.score", 0] },
+            { $ifNull: ["$games.board2.score", 0] }
+          ]
+        }
+      }},
+      // Sort by the total score
+      { $sort: { totalScore: -1, name: 1 } },
+      // Limit to top 50
+      { $limit: 50 }
+    ]);
     
-    const processedUsers: User[] = [];
-    for (const user_data of allUsers) {
-      // Skip users with no name
-      if (!user_data.name) continue;
-      
+    // Process the results
+    const top_users: User[] = [];
+    for (const user_data of topUsers) {
       const id = user_data._id.toString();
       const name = user_data.name;
       
@@ -46,7 +59,7 @@ export default async function getLeaderboardData(): Promise<User[]> {
         
       const totalBingos = board1Bingos + board2Bingos;
       
-      processedUsers.push({
+      top_users.push({
         id: id,
         name: name,
         points: totalScore,
@@ -55,16 +68,7 @@ export default async function getLeaderboardData(): Promise<User[]> {
       });
     }
     
-    const sortedUsers = processedUsers.sort((a, b) => {
-      if (b.points !== a.points) {
-        return b.points - a.points; 
-      }
-      // If points are equal, sort alphabetically by name as a tiebreaker
-      return a.name.localeCompare(b.name);
-    });
-    
-    const top_users = sortedUsers.slice(0, 50);
-    
+    // Pad with dummy entries until we have exactly 3
     while (top_users.length < 3) {
       const idx = top_users.length + 1;
       top_users.push({
