@@ -34,18 +34,16 @@ export default function AnswerModal({
   booth,
   onSubmit,
 }: AnswerModalProps) {
-  // ...existing state
   useEffect(() => {
     if (isOpen) {
       setSelected("");
-      setLocked(false);
       setError(null);
     }
   }, [isOpen, booth?.index]);
+  
   const [selected, setSelected] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [locked, setLocked] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -53,14 +51,12 @@ export default function AnswerModal({
 
     setIsSubmitting(true);
     const isCorrect = selected.charAt(0) === booth.correctAnswer;
-    setLocked(true);
 
     if (!isCorrect) {
-      setError("That's not correct");
+      setError("That's not correct - try again");
+      setIsSubmitting(false);
+      return; // Return early to allow re-answering
     }
-
-    console.log("Selected:", selected);
-    console.log("Correct Answer:", booth.correctAnswer);
 
     await new Promise((r) => setTimeout(r, 100));
     onSubmit(selected.charAt(0));
@@ -73,7 +69,6 @@ export default function AnswerModal({
 
   const handleClose = () => {
     setSelected("");
-    setLocked(false);
     setError(null);
     onClose();
   };
@@ -104,18 +99,12 @@ export default function AnswerModal({
                     key={idx}
                     className={`p-2 rounded-lg cursor-pointer border transition
                       ${
-                        locked
-                          ? selected === choice && choice.charAt(0) === booth.correctAnswer
-                            ? "bg-green-500/20 border-green-400" 
-                            : selected === choice
-                              ? "bg-red-500/20 border-red-400" 
-                              : "opacity-60"
-                          : selected === choice
-                            ? "bg-white/20 border-white/20"
-                            : "hover:bg-white/10 border-white/20"
+                        selected === choice
+                          ? "bg-white/20 border-white/20"
+                          : "hover:bg-white/10 border-white/20"
                       }
                     `}
-                    onClick={() => !locked && setSelected(choice)}
+                    onClick={() => setSelected(choice)}
                   >
                     {option}
                   </div>
@@ -140,7 +129,7 @@ export default function AnswerModal({
             </Button>
             <Button
               type="submit"
-              disabled={!selected || isSubmitting || locked}
+              disabled={!selected || isSubmitting}
               className={`bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-500 hover:to-amber-600 text-indigo-900 font-bold rounded-lg ${
                 isSubmitting ? "opacity-80" : ""
               }`}
