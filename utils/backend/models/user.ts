@@ -26,4 +26,8 @@ const userSchema = new Schema<UserData>(
   }
 );
 
+userSchema.index({ email: 1 }, { unique: true });
+userSchema.index({ "games.board1.score": -1 });
+userSchema.index({ "games.board2.score": -1 });
+
 export default mongoose.models.User || mongoose.model("User", userSchema);
