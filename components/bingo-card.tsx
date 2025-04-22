@@ -174,8 +174,6 @@ export default function BingoCard({
               ${
                 marked.includes(index)
                   ? "bg-gradient-to-br from-amber-400 to-amber-500 text-indigo-900"
-                  : currentSessionTried.includes(index) && lastAnsweredIndex === index
-                    ? "bg-red-600/60 border-red-300 text-white"
                     : booth
                       ? "bg-white/10 hover:bg-white/15 cursor-pointer"
                       : ""
