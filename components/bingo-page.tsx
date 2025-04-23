@@ -13,43 +13,53 @@ export default function BingoContainer() {
   const [score, setScore] = useState(0);
   const [totalScore, setTotalScore] = useState(0);
   const [activeBoard, setActiveBoard] = useState<"board1" | "board2">("board1");
-  const [key, setKey] = useState(0); // Add a key to force re-render of BingoCard
+  const [key, setKey] = useState(0); 
   const [allMarked, setAllMarked] = useState<number[]>([]);
   const [tried, setTried] = useState<number[]>([]);
+  const [isLoading, setIsLoading] = useState(true); 
 
-  const fetchData = async () => {
-    const id = await getUserId();
+  type FetchDataReturn = {
+    id: string;
+    data: any;
+  };
 
-    // Fetch data for the active board
-    const res = await fetch(
-      `/api/bingo/progress?userId=${id}&boardType=${activeBoard}`
-    );
-    const data = await res.json();
+  const fetchData = async (): Promise<FetchDataReturn> => {
+    try {
+      const id = await getUserId();
+      if (!id) {
+        throw new Error("User ID not found");
+      }
 
-    // Fetch data for both boards to calculate total score
-    const board1Res = await fetch(
-      `/api/bingo/progress?userId=${id}&boardType=board1`
-    );
-    const board1Data = await board1Res.json();
+      const res = await fetch(
+        `/api/bingo/progress?userId=${id}&boardType=${activeBoard}`
+      );
+      const data = await res.json();
 
-    const board2Res = await fetch(
-      `/api/bingo/progress?userId=${id}&boardType=board2`
-    );
-    const board2Data = await board2Res.json();
+      const board1Res = await fetch(
+        `/api/bingo/progress?userId=${id}&boardType=board1`
+      );
+      const board1Data = await board1Res.json();
 
-    // Calculate total score from both boards
-    const board1Score = board1Data.score || 0;
-    const board2Score = board2Data.score || 0;
-    const combinedScore = board1Score + board2Score;
+      const board2Res = await fetch(
+        `/api/bingo/progress?userId=${id}&boardType=board2`
+      );
+      const board2Data = await board2Res.json();
 
-    //updating values
-    setProgress(data.allMarked.length);
-    setAllMarked(data.allMarked);
-    setTried(data.tried);
-    setScore(data.score);
-    setTotalScore(combinedScore);
+      const board1Score = board1Data.score || 0;
+      const board2Score = board2Data.score || 0;
+      const combinedScore = board1Score + board2Score;
 
-    return { id, data };
+      setProgress(data.allMarked.length);
+      setAllMarked(data.allMarked);
+      setTried(data.tried);
+      setScore(data.score);
+      setTotalScore(combinedScore);
+
+      return { id, data };
+    } catch (error) {
+      console.error("Error fetching data:", error);
+      return { id: "", data: { allMarked: [], tried: [], score: 0 } };
+    }
   };
 
   const sendResult = async (
@@ -57,61 +67,82 @@ export default function BingoContainer() {
     boothIndex: number,
     answer: string
   ) => {
-    console.log("Making POST request to /api/bingo/check");
-    const res = await fetch("/api/bingo/check", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        userId: userId,
-        boothIndex: boothIndex,
-        answer: answer,
-        boardType: activeBoard,
-      }),
-      credentials: "include",
-    });
+    try {
+      setIsLoading(true); 
+      
+      console.log("Making POST request to /api/bingo/check");
+      const res = await fetch("/api/bingo/check", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userId: userId,
+          boothIndex: boothIndex,
+          answer: answer,
+          boardType: activeBoard,
+        }),
+        credentials: "include",
+      });
 
-    console.log("Response received:", res.status);
-    const data = await res.json();
-    console.log("Response data:", data);
+      console.log("Response received:", res.status);
+      const data = await res.json();
+      console.log("Response data:", data);
 
-    if (!res.ok) {
-      throw new Error(data.error || "Something went wrong");
+      if (!res.ok) {
+        throw new Error(data.error || "Something went wrong");
+      }
+
+      const board1Res = await fetch(
+        `/api/bingo/progress?userId=${userId}&boardType=board1`
+      );
+      const board1Data = await board1Res.json();
+
+      const board2Res = await fetch(
+        `/api/bingo/progress?userId=${userId}&boardType=board2`
+      );
+      const board2Data = await board2Res.json();
+
+      const board1Score = board1Data.score || 0;
+      const board2Score = board2Data.score || 0;
+      const combinedScore = board1Score + board2Score;
+
+      setProgress(data.allMarked.length);
+      setAllMarked(data.allMarked);
+      setTried(data.tried);
+      setScore(data.newScore);
+      setTotalScore(combinedScore);
+      
+      setIsLoading(false); 
+      
+      return {
+        ...data,
+        tried: data.tried || [],
+      };
+    } catch (error) {
+      console.error("Error sending result:", error);
+      setIsLoading(false); 
+      throw error;
     }
-
-    // Fetch updated data for both boards to calculate new total score
-    const board1Res = await fetch(
-      `/api/bingo/progress?userId=${userId}&boardType=board1`
-    );
-    const board1Data = await board1Res.json();
-
-    const board2Res = await fetch(
-      `/api/bingo/progress?userId=${userId}&boardType=board2`
-    );
-    const board2Data = await board2Res.json();
-
-    // Calculate new total score from both boards
-    const board1Score = board1Data.score || 0;
-    const board2Score = board2Data.score || 0;
-    const combinedScore = board1Score + board2Score;
-
-    //updating values
-    setProgress(data.allMarked.length);
-    setAllMarked(data.allMarked);
-    setTried(data.tried);
-    setScore(data.newScore);
-    setTotalScore(combinedScore);
-
-    return {
-      ...data,
-      tried: data.tried || [],
-    };
   };
 
-  // Fetch data when activeBoard changes
   useEffect(() => {
-    fetchData();
-    // Increment key to force re-render of BingoCard
-    setKey((prevKey) => prevKey + 1);
+    let isMounted = true;
+    
+    const loadData = async () => {
+      if (isMounted) {
+        setIsLoading(true);
+        await fetchData();
+        if (isMounted) {
+          setKey((prevKey) => prevKey + 1);
+          setIsLoading(false);
+        }
+      }
+    };
+    
+    loadData();
+    
+    return () => {
+      isMounted = false;
+    };
   }, [activeBoard]);
 
   const handleBoardChange = (board: "board1" | "board2") => {
@@ -127,13 +158,21 @@ export default function BingoContainer() {
       />
       <div className="container mx-auto px-4 pb-8 pt-2">
         <ProgressBar progress={progress} />
-        <BingoCard
-          key={key} // Add key to force re-render when board changes
-          fetchData={fetchData}
-          sendResult={sendResult}
-          bingoCard={activeBoard === "board1" ? board1 : board2}
-          allMarked={allMarked}
-        />
+        
+        {isLoading ? (
+          <div className="flex justify-center items-center h-64">
+            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+            <p className="ml-3 text-lg font-medium text-gray-700">Loading bingo card...</p>
+          </div>
+        ) : (
+          <BingoCard
+            key={key} 
+            fetchData={fetchData}
+            sendResult={sendResult}
+            bingoCard={activeBoard === "board1" ? board1 : board2}
+            allMarked={allMarked}
+          />
+        )}
       </div>
     </div>
   );
